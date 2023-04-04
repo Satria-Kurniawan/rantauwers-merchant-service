@@ -1,5 +1,9 @@
 const Kos = require("../models/kosModel");
 const { isValidObjectId } = require("mongoose");
+const amqp = require("amqplib/callback_api");
+
+const uri = process.env.MESSAGE_BROKER;
+const port = process.env.MESSAGE_BROKER_PORT;
 
 const insertKos = async (req, res) => {
   const {
@@ -63,9 +67,53 @@ const getKos = async (req, res) => {
 
     if (!kos) return res.status(400).json({ message: "Kos tidak ditemukan" });
 
+    amqp.connect(`${uri}:${port}`, (err, conn) => {
+      if (err) throw err;
+
+      conn.createChannel((err, channel) => {
+        if (err) throw err;
+
+        const queueName = "user_queue";
+
+        channel.assertQueue(queueName, {
+          durable: false,
+        });
+
+        console.log(`Sending request for user with id: ${kos.userId}`);
+
+        channel.assertQueue("user_queue_reply", { durable: false });
+
+        channel.sendToQueue(queueName, Buffer.from(kos.userId), {
+          replyTo: "user_queue_reply",
+        });
+
+        channel.consume(
+          "user_queue_reply",
+          async (msg) => {
+            const user = JSON.parse(msg.content.toString());
+            console.log(`Received response for user with id: ${kos.userId}`);
+
+            res.json({ kos, owner: user });
+
+            channel.close();
+            conn.close();
+          },
+          { noAck: true }
+        );
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+};
+
+const getKosById = async (req, res) => {
+  try {
+    const kos = await Kos.findById(req.params.kosId);
     res.json({ kos });
   } catch (error) {
-    res.status(500).json({ error });
+    res.json({ error });
   }
 };
 
@@ -189,6 +237,7 @@ module.exports = {
   insertKos,
   getAllKos,
   getKos,
+  getKosById,
   getKosByAdmin,
   updateKos,
   deleteKos,

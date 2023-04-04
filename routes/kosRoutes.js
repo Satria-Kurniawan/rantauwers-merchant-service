@@ -4,6 +4,7 @@ const {
   insertKos,
   getAllKos,
   getKos,
+  getKosById,
   getKosByAdmin,
   updateKos,
   deleteKos,
@@ -27,6 +28,7 @@ router.post(
 );
 router.get("/all", getAllKos);
 router.get("/:slug", getKos);
+router.get("/id/:kosId", getKosById);
 router.get("/my/own", [withAuth, withRoleAdmin], getKosByAdmin);
 router.put(
   "/:kosId/update",

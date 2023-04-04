@@ -20,7 +20,7 @@ router.post(
 router.get("/all", getAllRoom);
 router.get("/:kosId/all", getRoomsPerKos);
 router.get("/my/own", [withAuth, withRoleAdmin], getRoomsByAdmin);
-router.get("/:slug", getRoom);
+router.get("/:roomId", getRoom);
 router.put(
   "/:roomId/update",
   [withAuth, withRoleAdmin, upload.single("thumbnailImage")],

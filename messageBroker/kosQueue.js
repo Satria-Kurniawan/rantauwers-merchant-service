@@ -5,7 +5,7 @@ const uri = process.env.MESSAGE_BROKER;
 const port = process.env.MESSAGE_BROKER_PORT;
 
 // Memproduksi detail kos
-const kosQueueGetKosDetail = () => {
+const kosQueuePublishKosDetail = () => {
   amqp.connect(`${uri}:${port}`, (err, conn) => {
     if (err) throw err;
 
@@ -18,11 +18,8 @@ const kosQueueGetKosDetail = () => {
         durable: false,
       });
 
-      console.log(`Waiting for requests from ${queueName}`);
-
       channel.consume(queueName, async (msg) => {
         const kosSlug = msg.content.toString();
-        console.log(`Received request for kos with slug: ${kosSlug}`);
 
         // Process the request and send response back to message broker
         const kos = await Kos.findOne({ slug: kosSlug });
@@ -42,4 +39,4 @@ const kosQueueGetKosDetail = () => {
   });
 };
 
-module.exports = { kosQueueGetKosDetail };
+module.exports = { kosQueuePublishKosDetail };

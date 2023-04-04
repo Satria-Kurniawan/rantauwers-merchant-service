@@ -86,7 +86,7 @@ const getRoomsByAdmin = async (req, res) => {
 
 const getRoom = async (req, res) => {
   try {
-    const room = await Room.findOne({ slug: req.params.slug });
+    const room = await Room.findById(req.params.roomId);
 
     res.json({ room });
   } catch (error) {
